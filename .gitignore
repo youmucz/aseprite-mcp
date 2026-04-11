@@ -9,6 +9,7 @@
 *.dll
 *.so
 *.dylib
+*.pyc
 
 # Test files
 *.test
