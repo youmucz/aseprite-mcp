@@ -13,13 +13,21 @@ from aseprite_mcp.lua.drawing import (
     generate_draw_circle,
     generate_fill_area,
 )
-from aseprite_mcp.tools.common import Color, Point
+from aseprite_mcp.tools.common import Color, Pixel, Point
 
 
-def register_drawing_tools(mcp: FastMCP, client: AsepriteClient, config: Config) -> None:
-    
+def register_drawing_tools(
+    mcp: FastMCP, client: AsepriteClient, config: Config
+) -> None:
+
     @mcp.tool()
-    async def draw_pixels(sprite_path: str, layer_name: str, frame_number: int, pixels: list[dict], use_palette: bool = False) -> str:
+    async def draw_pixels(
+        sprite_path: str,
+        layer_name: str,
+        frame_number: int,
+        pixels: list[dict],
+        use_palette: bool = False,
+    ) -> str:
         f"""Draw individual pixels at specified coordinates.
         
         Args:
@@ -38,7 +46,7 @@ def register_drawing_tools(mcp: FastMCP, client: AsepriteClient, config: Config)
             return json.dumps({"error": "frame_number must be at least 1"})
         if not pixels:
             return json.dumps({"error": "pixels array cannot be empty"})
-        
+
         pixel_objs = []
         for i, p in enumerate(pixels):
             try:
@@ -46,14 +54,25 @@ def register_drawing_tools(mcp: FastMCP, client: AsepriteClient, config: Config)
                 pixel_objs.append(Pixel(x=p["x"], y=p["y"], color=color))
             except (KeyError, ValueError) as e:
                 return json.dumps({"error": f"Invalid pixel at index {i}: {e}"})
-        
+
         script = generate_draw_pixels(layer_name, frame_number, pixel_objs, use_palette)
         await client.execute_lua(script, sprite_path)
-        
+
         return json.dumps({"pixels_drawn": len(pixel_objs)})
-    
+
     @mcp.tool()
-    async def draw_line(sprite_path: str, layer_name: str, frame_number: int, x1: int, y1: int, x2: int, y2: int, color: str, thickness: int = 1, use_palette: bool = False) -> str:
+    async def draw_line(
+        sprite_path: str,
+        layer_name: str,
+        frame_number: int,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+        color: str,
+        thickness: int = 1,
+        use_palette: bool = False,
+    ) -> str:
         f"""Draw a line between two points.
         
         Args:
@@ -77,19 +96,30 @@ def register_drawing_tools(mcp: FastMCP, client: AsepriteClient, config: Config)
             return json.dumps({"error": "frame_number must be at least 1"})
         if thickness < 1 or thickness > 100:
             return json.dumps({"error": "thickness must be 1-100"})
-        
+
         try:
             color_obj = Color.from_hex(color)
         except ValueError:
             return json.dumps({"error": "Invalid color format"})
-        
-        script = generate_draw_line(layer_name, frame_number, x1, y1, x2, y2, color_obj, thickness, use_palette)
+
+        script = generate_draw_line(
+            layer_name, frame_number, x1, y1, x2, y2, color_obj, thickness, use_palette
+        )
         await client.execute_lua(script, sprite_path)
-        
+
         return json.dumps({"success": True})
-    
+
     @mcp.tool()
-    async def draw_contour(sprite_path: str, layer_name: str, frame_number: int, points: list[dict], color: str, thickness: int = 1, closed: bool = False, use_palette: bool = False) -> str:
+    async def draw_contour(
+        sprite_path: str,
+        layer_name: str,
+        frame_number: int,
+        points: list[dict],
+        color: str,
+        thickness: int = 1,
+        closed: bool = False,
+        use_palette: bool = False,
+    ) -> str:
         f"""Draw a polyline or polygon by connecting multiple points.
         
         Args:
@@ -113,21 +143,40 @@ def register_drawing_tools(mcp: FastMCP, client: AsepriteClient, config: Config)
             return json.dumps({"error": "at least 2 points are required"})
         if thickness < 1 or thickness > 100:
             return json.dumps({"error": "thickness must be 1-100"})
-        
+
         try:
             color_obj = Color.from_hex(color)
         except ValueError:
             return json.dumps({"error": "Invalid color format"})
-        
+
         point_objs = [Point(x=p["x"], y=p["y"]) for p in points]
-        
-        script = generate_draw_contour(layer_name, frame_number, point_objs, color_obj, thickness, closed, use_palette)
+
+        script = generate_draw_contour(
+            layer_name,
+            frame_number,
+            point_objs,
+            color_obj,
+            thickness,
+            closed,
+            use_palette,
+        )
         await client.execute_lua(script, sprite_path)
-        
+
         return json.dumps({"success": True})
-    
+
     @mcp.tool()
-    async def draw_rectangle(sprite_path: str, layer_name: str, frame_number: int, x: int, y: int, width: int, height: int, color: str, filled: bool = False, use_palette: bool = False) -> str:
+    async def draw_rectangle(
+        sprite_path: str,
+        layer_name: str,
+        frame_number: int,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        color: str,
+        filled: bool = False,
+        use_palette: bool = False,
+    ) -> str:
         f"""Draw a rectangle with specified position and size.
         
         Args:
@@ -151,19 +200,39 @@ def register_drawing_tools(mcp: FastMCP, client: AsepriteClient, config: Config)
             return json.dumps({"error": "frame_number must be at least 1"})
         if width < 1 or height < 1:
             return json.dumps({"error": "width and height must be at least 1"})
-        
+
         try:
             color_obj = Color.from_hex(color)
         except ValueError:
             return json.dumps({"error": "Invalid color format"})
-        
-        script = generate_draw_rectangle(layer_name, frame_number, x, y, width, height, color_obj, filled, use_palette)
+
+        script = generate_draw_rectangle(
+            layer_name,
+            frame_number,
+            x,
+            y,
+            width,
+            height,
+            color_obj,
+            filled,
+            use_palette,
+        )
         await client.execute_lua(script, sprite_path)
-        
+
         return json.dumps({"success": True})
-    
+
     @mcp.tool()
-    async def draw_circle(sprite_path: str, layer_name: str, frame_number: int, center_x: int, center_y: int, radius: int, color: str, filled: bool = False, use_palette: bool = False) -> str:
+    async def draw_circle(
+        sprite_path: str,
+        layer_name: str,
+        frame_number: int,
+        center_x: int,
+        center_y: int,
+        radius: int,
+        color: str,
+        filled: bool = False,
+        use_palette: bool = False,
+    ) -> str:
         f"""Draw a circle with specified center and radius.
         
         Args:
@@ -186,19 +255,37 @@ def register_drawing_tools(mcp: FastMCP, client: AsepriteClient, config: Config)
             return json.dumps({"error": "frame_number must be at least 1"})
         if radius < 1:
             return json.dumps({"error": "radius must be at least 1"})
-        
+
         try:
             color_obj = Color.from_hex(color)
         except ValueError:
             return json.dumps({"error": "Invalid color format"})
-        
-        script = generate_draw_circle(layer_name, frame_number, center_x, center_y, radius, color_obj, filled, use_palette)
+
+        script = generate_draw_circle(
+            layer_name,
+            frame_number,
+            center_x,
+            center_y,
+            radius,
+            color_obj,
+            filled,
+            use_palette,
+        )
         await client.execute_lua(script, sprite_path)
-        
+
         return json.dumps({"success": True})
-    
+
     @mcp.tool()
-    async def fill_area(sprite_path: str, layer_name: str, frame_number: int, x: int, y: int, color: str, tolerance: int = 0, use_palette: bool = False) -> str:
+    async def fill_area(
+        sprite_path: str,
+        layer_name: str,
+        frame_number: int,
+        x: int,
+        y: int,
+        color: str,
+        tolerance: int = 0,
+        use_palette: bool = False,
+    ) -> str:
         f"""Flood fill from a starting point with specified color.
         
         Args:
@@ -220,13 +307,15 @@ def register_drawing_tools(mcp: FastMCP, client: AsepriteClient, config: Config)
             return json.dumps({"error": "frame_number must be at least 1"})
         if tolerance < 0 or tolerance > 255:
             return json.dumps({"error": "tolerance must be 0-255"})
-        
+
         try:
             color_obj = Color.from_hex(color)
         except ValueError:
             return json.dumps({"error": "Invalid color format"})
-        
-        script = generate_fill_area(layer_name, frame_number, x, y, color_obj, tolerance, use_palette)
+
+        script = generate_fill_area(
+            layer_name, frame_number, x, y, color_obj, tolerance, use_palette
+        )
         await client.execute_lua(script, sprite_path)
-        
+
         return json.dumps({"success": True})

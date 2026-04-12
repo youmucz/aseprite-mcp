@@ -18,6 +18,9 @@ from aseprite_mcp.tools.quantization import register_quantization_tools
 from aseprite_mcp.tools.auto_shading import register_auto_shading_tools
 from aseprite_mcp.tools.antialiasing import register_antialiasing_tools
 from aseprite_mcp.tools.transform import register_transform_tools
+from aseprite_mcp.tools.batch import register_batch_tools
+from aseprite_mcp.tools.pixelize import register_pixelize_tools
+from aseprite_mcp.tools.plan import register_plan_tools
 
 
 def register_all_tools(mcp: FastMCP, client: AsepriteClient, config: Config) -> None:
@@ -34,3 +37,6 @@ def register_all_tools(mcp: FastMCP, client: AsepriteClient, config: Config) -> 
     register_auto_shading_tools(mcp, client, config)
     register_antialiasing_tools(mcp, client, config)
     register_transform_tools(mcp, client, config)
+    register_batch_tools(mcp, client, config)
+    register_pixelize_tools(mcp, client, config)
+    register_plan_tools(mcp, client, config)

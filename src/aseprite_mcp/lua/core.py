@@ -12,6 +12,15 @@ def escape_string(s: str) -> str:
     return s
 
 
+def escape_json_for_lua_print(s: str) -> str:
+    s = s.replace("\\", "/")
+    s = s.replace('"', '\\"')
+    s = s.replace("\n", "\\n")
+    s = s.replace("\r", "\\r")
+    s = s.replace("\t", "\\t")
+    return s
+
+
 def format_color(c: Color) -> str:
     return f"Color({c.r}, {c.g}, {c.b}, {c.a})"
 

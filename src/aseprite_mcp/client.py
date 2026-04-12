@@ -13,7 +13,16 @@ class AsepriteClient:
         self.exec_path = exec_path
         self.temp_dir = temp_dir
         self.timeout = timeout
+        self._file_locks: dict[str, asyncio.Lock] = {}
+        self._locks_guard = asyncio.Lock()
         Path(self.temp_dir).mkdir(parents=True, exist_ok=True)
+
+    async def _get_file_lock(self, sprite_path: str) -> asyncio.Lock:
+        key = os.path.abspath(sprite_path) if sprite_path else "__new__"
+        async with self._locks_guard:
+            if key not in self._file_locks:
+                self._file_locks[key] = asyncio.Lock()
+            return self._file_locks[key]
 
     async def execute_command(self, args: list[str]) -> str:
         cmd = [self.exec_path] + args
@@ -41,6 +50,11 @@ class AsepriteClient:
         return stdout_str
 
     async def execute_lua(self, script: str, sprite_path: str = "") -> str:
+        file_lock = await self._get_file_lock(sprite_path)
+        async with file_lock:
+            return await self._execute_lua_inner(script, sprite_path)
+
+    async def _execute_lua_inner(self, script: str, sprite_path: str) -> str:
         script_path = self._create_temp_script(script)
         try:
             args = ["--batch"]
@@ -70,6 +84,7 @@ class AsepriteClient:
 
     def cleanup_old_temp_files(self, max_age_seconds: int = 3600) -> None:
         import time
+
         temp = Path(self.temp_dir)
         if not temp.exists():
             return

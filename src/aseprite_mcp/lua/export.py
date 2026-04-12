@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from aseprite_mcp.lua.core import escape_string
+from aseprite_mcp.lua.core import escape_string, escape_json_for_lua_print
 
 
 def generate_export_sprite(output_path: str, frame_number: int) -> str:
@@ -109,7 +109,7 @@ local metadataPart = "null"
 if {metadata_path_lua} ~= nil then
     metadataPart = '\\"' .. string.gsub({metadata_path_lua}, '\\\\"', '\\\\\\\\"') .. '\\"'
 end
-print('{{"spritesheet_path":"{escaped_path}","metadata_path":' .. metadataPart .. ',"frame_count":' .. #spr.frames .. '}}')
+print('{{"spritesheet_path":"{escape_json_for_lua_print(output_path)}","metadata_path":' .. metadataPart .. ',"frame_count":' .. #spr.frames .. '}}')
 spr:saveAs(spr.filename)'''
 
 
@@ -144,6 +144,7 @@ print("Image imported successfully")'''
 
 def generate_save_as(output_path: str) -> str:
     escaped_path = escape_string(output_path)
+    json_path = escape_json_for_lua_print(output_path)
 
     return f'''local spr = app.activeSprite
 if not spr then
@@ -151,4 +152,4 @@ if not spr then
 end
 
 spr:saveAs("{escaped_path}")
-print('{{"success":true,"file_path":"{escaped_path}"}}')'''
+print('{{"success":true,"file_path":"{json_path}"}}')'''
