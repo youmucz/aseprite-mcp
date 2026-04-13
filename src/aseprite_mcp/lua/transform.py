@@ -203,7 +203,7 @@ def generate_downsample_image(
     escaped_source = escape_string(source_path)
     escaped_output = escape_string(output_path)
 
-    return f'''local spr = Sprite("{escaped_source}")
+    return f'''local spr = app.open("{escaped_source}")
 if not spr then
     error("Failed to load source image")
 end
@@ -212,12 +212,12 @@ local scaleX = {target_width} / spr.width
 local scaleY = {target_height} / spr.height
 
 app.transaction(function()
-    app.command(SpriteSize {{
+    app.command.SpriteSize {{
         ui = false,
         width = {target_width},
         height = {target_height},
         algorithm = "BILINEAR"
-    }})
+    }}
 end)
 
 spr:saveAs("{escaped_output}")

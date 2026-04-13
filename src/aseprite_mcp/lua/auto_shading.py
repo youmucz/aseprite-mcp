@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json as _json
 
-from aseprite_mcp.lua.core import escape_string
+from aseprite_mcp.lua.core import escape_json_for_lua_print, escape_string
 
 
 def generate_apply_auto_shading_result(
@@ -24,6 +24,19 @@ def generate_apply_auto_shading_result(
         color_list.append(f"Color({r}, {g}, {b}, 255)")
 
     colors_str = ", ".join(color_list)
+
+    pal_len = len(generated_colors)
+    palette_json = escape_json_for_lua_print(_json.dumps(generated_colors))
+
+    result_json = _json.dumps(
+        {
+            "success": True,
+            "colors_added": pal_len,
+            "palette": generated_colors,
+            "regions_shaded": regions_shaded_count,
+        }
+    )
+    escaped_result = escape_json_for_lua_print(result_json)
 
     return f'''local spr = app.activeSprite
 if not spr then
@@ -63,14 +76,15 @@ cel.image = shadedImage
 
 -- Add generated colors to palette
 local palette = spr.palettes[1]
+local palCount = #palette
 local newColors = {{{colors_str}}}
-
 for i, color in ipairs(newColors) do
-    if """ + "#""" + """palette < 256 then
-        palette:resize(""" + "#""" + """palette + 1)
-        palette:setColor(""" + "#""" + """palette - 1, color)
+    if palCount < 256 then
+        palette:resize(palCount + 1)
+        palette:setColor(palCount, color)
+        palCount = palCount + 1
     end
 end
 
-print('{{"success":true,"colors_added":{len(generated_colors)},"palette":{_json.dumps(generated_colors)},"regions_shaded":{regions_shaded_count}}}')
+print('{escaped_result}')
 spr:saveAs(spr.filename)'''

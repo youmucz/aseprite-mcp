@@ -1,17 +1,24 @@
 from __future__ import annotations
 
-from aseprite_mcp.lua.core import escape_string, format_color_with_palette, format_color_with_palette_for_tool, format_point, generate_palette_snapper_helper
+from aseprite_mcp.lua.core import (
+    escape_string,
+    format_color_with_palette,
+    format_color_with_palette_for_tool,
+    format_point,
+    generate_palette_snapper_helper,
+)
 from aseprite_mcp.tools.common import Color, Pixel, Point
 
 
-def generate_draw_pixels(layer_name: str, frame_number: int, pixels: list[Pixel], use_palette: bool) -> str:
+def generate_draw_pixels(
+    layer_name: str, frame_number: int, pixels: list[Pixel], use_palette: bool
+) -> str:
     escaped_name = escape_string(layer_name)
 
     code = ""
 
-    if use_palette:
-        code += generate_palette_snapper_helper()
-        code += "\n"
+    code += generate_palette_snapper_helper()
+    code += "\n"
 
     code += f"""local spr = app.activeSprite
 if not spr then
@@ -46,7 +53,7 @@ app.transaction(function()
 """
 
     for p in pixels:
-        code += f"\timg:putPixel({p.x}, {p.y}, {format_color_with_palette(p.color, use_palette)})\n"
+        code += f"\timg:putPixel({p.x}, {p.y}, snapToPaletteForPixel({p.color.r}, {p.color.g}, {p.color.b}, {p.color.a}))\n"
 
     code += """end)
 
@@ -56,7 +63,17 @@ print("Pixels drawn successfully")"""
     return code
 
 
-def generate_draw_line(layer_name: str, frame_number: int, x1: int, y1: int, x2: int, y2: int, color: Color, thickness: int, use_palette: bool) -> str:
+def generate_draw_line(
+    layer_name: str,
+    frame_number: int,
+    x1: int,
+    y1: int,
+    x2: int,
+    y2: int,
+    color: Color,
+    thickness: int,
+    use_palette: bool,
+) -> str:
     escaped_name = escape_string(layer_name)
 
     code = ""
@@ -108,7 +125,15 @@ print("Line drawn successfully")"""
     return code
 
 
-def generate_draw_contour(layer_name: str, frame_number: int, points: list[Point], color: Color, thickness: int, closed: bool, use_palette: bool) -> str:
+def generate_draw_contour(
+    layer_name: str,
+    frame_number: int,
+    points: list[Point],
+    color: Color,
+    thickness: int,
+    closed: bool,
+    use_palette: bool,
+) -> str:
     escaped_name = escape_string(layer_name)
 
     code = ""
@@ -156,7 +181,7 @@ app.transaction(function()
 		tool = "line",
 		color = color,
 		brush = brush,
-		points = {{{format_point(points[i])}, {format_point(points[i+1])}}}
+		points = {{{format_point(points[i])}, {format_point(points[i + 1])}}}
 	}}
 """
 
@@ -179,7 +204,17 @@ print("Contour drawn successfully")"""
     return code
 
 
-def generate_draw_rectangle(layer_name: str, frame_number: int, x: int, y: int, width: int, height: int, color: Color, filled: bool, use_palette: bool) -> str:
+def generate_draw_rectangle(
+    layer_name: str,
+    frame_number: int,
+    x: int,
+    y: int,
+    width: int,
+    height: int,
+    color: Color,
+    filled: bool,
+    use_palette: bool,
+) -> str:
     escaped_name = escape_string(layer_name)
     tool = "filled_rectangle" if filled else "rectangle"
 
@@ -229,7 +264,16 @@ print("Rectangle drawn successfully")"""
     return code
 
 
-def generate_draw_circle(layer_name: str, frame_number: int, center_x: int, center_y: int, radius: int, color: Color, filled: bool, use_palette: bool) -> str:
+def generate_draw_circle(
+    layer_name: str,
+    frame_number: int,
+    center_x: int,
+    center_y: int,
+    radius: int,
+    color: Color,
+    filled: bool,
+    use_palette: bool,
+) -> str:
     escaped_name = escape_string(layer_name)
     tool = "filled_ellipse" if filled else "ellipse"
 
@@ -284,7 +328,15 @@ print("Circle drawn successfully")"""
     return code
 
 
-def generate_fill_area(layer_name: str, frame_number: int, x: int, y: int, color: Color, tolerance: int, use_palette: bool) -> str:
+def generate_fill_area(
+    layer_name: str,
+    frame_number: int,
+    x: int,
+    y: int,
+    color: Color,
+    tolerance: int,
+    use_palette: bool,
+) -> str:
     escaped_name = escape_string(layer_name)
 
     code = ""

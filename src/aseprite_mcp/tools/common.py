@@ -33,10 +33,19 @@ class Color:
     def from_hex(cls, hex_str: str) -> "Color":
         hex_str = hex_str.lstrip("#")
         if len(hex_str) == 6:
-            r, g, b = int(hex_str[0:2], 16), int(hex_str[2:4], 16), int(hex_str[4:6], 16)
+            r, g, b = (
+                int(hex_str[0:2], 16),
+                int(hex_str[2:4], 16),
+                int(hex_str[4:6], 16),
+            )
             return cls(r, g, b, 255)
         elif len(hex_str) == 8:
-            r, g, b, a = int(hex_str[0:2], 16), int(hex_str[2:4], 16), int(hex_str[4:6], 16), int(hex_str[6:8], 16)
+            r, g, b, a = (
+                int(hex_str[0:2], 16),
+                int(hex_str[2:4], 16),
+                int(hex_str[4:6], 16),
+                int(hex_str[6:8], 16),
+            )
             return cls(r, g, b, a)
         raise ValueError(f"Invalid hex color: {hex_str}")
 
@@ -73,13 +82,24 @@ class SpriteInfo:
 
 
 def parse_json_output(output: str) -> dict:
-    output = output.strip()
+    output = extract_mcp_output(output).strip()
     if not output:
         return {}
     try:
         return json.loads(output)
     except json.JSONDecodeError:
         return {"raw": output}
+
+
+_MCP_MARKER = "__MCP__:"
+
+
+def extract_mcp_output(raw: str) -> str:
+    for line in raw.splitlines():
+        line = line.strip()
+        if line.startswith(_MCP_MARKER):
+            return line[len(_MCP_MARKER) :]
+    return raw.strip()
 
 
 def format_tool_result(data: dict | str) -> str:

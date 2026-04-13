@@ -83,23 +83,29 @@ if not spr then
 end
 
 local targetLayer = nil
+local savedVis = {{}}
 for _, layer in ipairs(spr.layers) do
+    savedVis[layer] = layer.isVisible
     if layer.name == "{escaped_layer}" then
         targetLayer = layer
-        break
+    else
+        layer.isVisible = false
     end
 end
 
 if not targetLayer then
+    for layer, vis in pairs(savedVis) do
+        layer.isVisible = vis
+    end
     error("Layer not found: {escaped_layer}")
 end
 
-local cel = targetLayer:cel({frame_number})
-if not cel then
-    error("No cel found at frame {frame_number}")
-end
+spr:saveCopyAs("{escaped_png}")
 
-cel.image:saveAs("{escaped_png}")
+for layer, vis in pairs(savedVis) do
+    layer.isVisible = vis
+end
+spr:saveAs(spr.filename)
 print("Exported successfully")'''
 
             await client.execute_lua(export_script, sprite_path)
@@ -119,9 +125,17 @@ print("Exported successfully")'''
             result = await client.execute_lua(apply_script, sprite_path)
 
             try:
-                data = json.loads(result)
+                json_line = result.strip()
+                for line in reversed(result.strip().splitlines()):
+                    line = line.strip()
+                    if line.startswith("{"):
+                        json_line = line
+                        break
+                data = json.loads(json_line)
             except json.JSONDecodeError:
-                return json.dumps({"error": "Failed to parse shading result"})
+                return json.dumps(
+                    {"error": f"Failed to parse shading result: {result!r}"}
+                )
 
             return json.dumps(data)
         finally:

@@ -36,6 +36,8 @@ if not cel then
 end
 
 local img = cel.image
+local palette = spr.palettes[1]
+local isIndexed = (spr.colorMode == ColorMode.INDEXED)
 local pixels = {{}}
 
 for py = {y}, {y + height - 1} do
@@ -44,15 +46,17 @@ for py = {y}, {y + height - 1} do
         local imgY = py - cel.position.y
         if imgX >= 0 and imgX < img.width and imgY >= 0 and imgY < img.height then
             local pixel = img:getPixel(imgX, imgY)
-            local a = app.pixelColor.rgbaA(pixel)
-            local r = app.pixelColor.rgbaR(pixel)
-            local g = app.pixelColor.rgbaG(pixel)
-            local b = app.pixelColor.rgbaB(pixel)
-            local parts = {{}}
-            table.insert(parts, string.format('{{"x":%d,"y":%d,"color":"#%02x%02x%02x%02x"}}', px, py, r, g, b, a))
-            for _, p in ipairs(parts) do
-                table.insert(pixels, p)
+            local r, g, b, a
+            if isIndexed then
+                local palColor = palette:getColor(pixel)
+                r, g, b, a = palColor.red, palColor.green, palColor.blue, palColor.alpha
+            else
+                a = app.pixelColor.rgbaA(pixel)
+                r = app.pixelColor.rgbaR(pixel)
+                g = app.pixelColor.rgbaG(pixel)
+                b = app.pixelColor.rgbaB(pixel)
             end
+            table.insert(pixels, string.format('{{"x":%d,"y":%d,"color":"#%02x%02x%02x%02x"}}', px, py, r, g, b, a))
         end
     end
 end
@@ -100,6 +104,8 @@ if not cel then
 end
 
 local img = cel.image
+local palette = spr.palettes[1]
+local isIndexed = (spr.colorMode == ColorMode.INDEXED)
 local pixels = {{}}
 local count = 0
 local offset = {offset}
@@ -112,10 +118,16 @@ for py = {y}, {y + height - 1} do
         if imgX >= 0 and imgX < img.width and imgY >= 0 and imgY < img.height then
             if count >= offset and count < offset + pageSize then
                 local pixel = img:getPixel(imgX, imgY)
-                local a = app.pixelColor.rgbaA(pixel)
-                local r = app.pixelColor.rgbaR(pixel)
-                local g = app.pixelColor.rgbaG(pixel)
-                local b = app.pixelColor.rgbaB(pixel)
+                local r, g, b, a
+                if isIndexed then
+                    local palColor = palette:getColor(pixel)
+                    r, g, b, a = palColor.red, palColor.green, palColor.blue, palColor.alpha
+                else
+                    a = app.pixelColor.rgbaA(pixel)
+                    r = app.pixelColor.rgbaR(pixel)
+                    g = app.pixelColor.rgbaG(pixel)
+                    b = app.pixelColor.rgbaB(pixel)
+                end
                 table.insert(pixels, string.format('{{"x":%d,"y":%d,"color":"#%02x%02x%02x%02x"}}', px, py, r, g, b, a))
             end
             count = count + 1

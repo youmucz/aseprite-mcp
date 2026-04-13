@@ -144,6 +144,7 @@ def register_pixelize_tools(
         dither: bool = False,
         output_path: str = "",
         export_png: bool = True,
+        color_mode: str = "rgb",
     ) -> str:
         """Convert a reference image to pixel art in a single step. Performs downsampling, color quantization, and optional edge detection to produce an Aseprite sprite file.
 
@@ -156,6 +157,7 @@ def register_pixelize_tools(
             dither: Apply Floyd-Steinberg dithering (default: false)
             output_path: Output .aseprite file path (auto-generated if empty)
             export_png: Also export a PNG preview (default: true)
+            color_mode: Color mode: rgb (default, recommended) or indexed
 
         Returns:
             JSON with sprite_path, export_path, palette_size, dimensions
@@ -170,6 +172,8 @@ def register_pixelize_tools(
             return json.dumps(
                 {"error": "method must be quantize, edge_trace, or hybrid"}
             )
+        if color_mode not in ("rgb", "indexed"):
+            return json.dumps({"error": "color_mode must be rgb or indexed"})
 
         try:
             from PIL import Image
@@ -236,7 +240,7 @@ def register_pixelize_tools(
             edge_pixels=edge_pixels if method in ("edge_trace", "hybrid") else None,
             output_path=output_path,
             export_path=export_path,
-            color_mode="indexed",
+            color_mode=color_mode,
         )
 
         try:
